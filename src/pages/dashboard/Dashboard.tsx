@@ -1,19 +1,118 @@
 
 import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import DashboardCard from '@/components/dashboard/DashboardCard';
-import { BedDouble, Users, FileText, AlertCircle, Building2 } from 'lucide-react';
-import { mockStudents, mockRooms, mockLeaveRequests, mockComplaints } from '@/data/mockData';
+import { BedDouble, Users, FileText, AlertCircle, Building2, CreditCard } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { format, parseISO } from 'date-fns';
 
 const Dashboard = () => {
   useEffect(() => {
     document.title = 'Dashboard | Hostel Management System';
   }, []);
 
-  const totalStudents = mockStudents.length;
-  const totalRooms = mockRooms.length;
-  const availableRooms = mockRooms.filter(room => room.status === 'Available').length;
-  const pendingLeaveRequests = mockLeaveRequests.filter(req => req.status === 'Pending').length;
-  const pendingComplaints = mockComplaints.filter(complaint => complaint.status === 'Pending').length;
+  // Fetch students count
+  const { data: studentsCount = 0 } = useQuery({
+    queryKey: ['studentsCount'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true });
+      
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
+  // Fetch rooms data
+  const { data: roomsData } = useQuery({
+    queryKey: ['roomsData'],
+    queryFn: async () => {
+      const { data: rooms, error } = await supabase
+        .from('rooms')
+        .select('*');
+      
+      if (error) throw error;
+      
+      const totalRooms = rooms.length;
+      const availableRooms = rooms.filter(room => room.status === 'Available').length;
+      
+      return { totalRooms, availableRooms };
+    },
+    initialData: { totalRooms: 0, availableRooms: 0 }
+  });
+
+  // Fetch pending leave requests count
+  const { data: pendingLeaveRequests = 0 } = useQuery({
+    queryKey: ['pendingLeaveRequests'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('leave_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Pending');
+      
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
+  // Fetch pending complaints count
+  const { data: pendingComplaints = 0 } = useQuery({
+    queryKey: ['pendingComplaints'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('complaints')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Pending');
+      
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
+  // Fetch due fee records count
+  const { data: dueFees = 0 } = useQuery({
+    queryKey: ['dueFees'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('fee_records')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Due');
+      
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
+  // Fetch recent students
+  const { data: recentStudents = [] } = useQuery({
+    queryKey: ['recentStudents'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Fetch recent inquiries
+  const { data: recentInquiries = [] } = useQuery({
+    queryKey: ['recentInquiries'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('inquiries')
+        .select('*')
+        .order('submission_date', { ascending: false })
+        .limit(5);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
   return (
     <div>
@@ -22,15 +121,15 @@ const Dashboard = () => {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-6">
         <DashboardCard
           title="Total Students"
-          value={totalStudents}
+          value={studentsCount}
           icon={Users}
           description="Registered in hostel"
         />
         <DashboardCard
           title="Total Rooms"
-          value={totalRooms}
+          value={roomsData.totalRooms}
           icon={BedDouble}
-          description={`${availableRooms} rooms available`}
+          description={`${roomsData.availableRooms} rooms available`}
         />
         <DashboardCard
           title="Leave Requests"
@@ -44,65 +143,82 @@ const Dashboard = () => {
           icon={AlertCircle}
           description="Requires attention"
         />
+        <DashboardCard
+          title="Pending Fees"
+          value={dueFees}
+          icon={CreditCard}
+          description="Due payments"
+        />
       </div>
       
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="dashboard-card">
+        <div className="border rounded-lg p-6 bg-card text-card-foreground">
           <h2 className="text-xl font-semibold mb-4 flex items-center">
             <Users className="mr-2 h-5 w-5" /> Recent Students
           </h2>
           <div className="space-y-4">
-            {mockStudents.slice(0, 5).map((student) => (
-              <div key={student.id} className="flex items-center justify-between border-b pb-2">
-                <div>
-                  <p className="font-medium">{student.name}</p>
-                  <p className="text-sm text-muted-foreground">Roll No: {student.rollNo}</p>
+            {recentStudents.length === 0 ? (
+              <p className="text-muted-foreground">No students registered yet.</p>
+            ) : (
+              recentStudents.map((student) => (
+                <div key={student.id} className="flex items-center justify-between border-b pb-2">
+                  <div>
+                    <p className="font-medium">{student.name}</p>
+                    <p className="text-sm text-muted-foreground">Roll No: {student.roll_no}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">Room {student.room_no}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">Room {student.roomNo}</p>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
         
-        <div className="dashboard-card">
+        <div className="border rounded-lg p-6 bg-card text-card-foreground">
           <h2 className="text-xl font-semibold mb-4 flex items-center">
             <Building2 className="mr-2 h-5 w-5" /> Recent Inquiries
           </h2>
           <div className="space-y-4">
-            {/* We would display recent inquiries here */}
-            <div className="flex items-center justify-between border-b pb-2">
-              <div>
-                <p className="font-medium">David Miller</p>
-                <p className="text-sm text-muted-foreground">Accommodation Inquiry</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">2025-04-10</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-between border-b pb-2">
-              <div>
-                <p className="font-medium">Sarah Johnson</p>
-                <p className="text-sm text-muted-foreground">Fee Structure</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">2025-04-13</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-between border-b pb-2">
-              <div>
-                <p className="font-medium">Thomas Lee</p>
-                <p className="text-sm text-muted-foreground">Hostel Facilities</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">2025-04-15</p>
-              </div>
-            </div>
+            {recentInquiries.length === 0 ? (
+              <p className="text-muted-foreground">No inquiries received yet.</p>
+            ) : (
+              recentInquiries.map((inquiry) => (
+                <div key={inquiry.id} className="flex items-center justify-between border-b pb-2">
+                  <div>
+                    <p className="font-medium">{inquiry.name}</p>
+                    <p className="text-sm text-muted-foreground">{inquiry.subject}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground">{format(parseISO(inquiry.submission_date), 'yyyy-MM-dd')}</p>
+                    <StatusBadge status={inquiry.status} className="ml-2 px-1.5 py-0.5 text-xs rounded" />
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
     </div>
+  );
+};
+
+const StatusBadge = ({ status, className }: { status: string, className?: string }) => {
+  const getStatusClass = () => {
+    switch (status) {
+      case 'Read':
+        return 'bg-blue-100 text-blue-800';
+      case 'Unread':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <span className={`inline-flex items-center ${getStatusClass()} ${className || ''}`}>
+      {status}
+    </span>
   );
 };
 

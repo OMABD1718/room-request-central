@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +17,12 @@ import Login from "./pages/auth/Login";
 // Dashboard pages
 import DashboardLayout from "./components/layout/DashboardLayout";
 import Dashboard from "./pages/dashboard/Dashboard";
+import StudentsPage from "./pages/dashboard/students/StudentsPage";
+import RoomsPage from "./pages/dashboard/rooms/RoomsPage";
+import LeaveRequestsPage from "./pages/dashboard/leave-requests/LeaveRequestsPage";
+import ComplaintsPage from "./pages/dashboard/complaints/ComplaintsPage";
+import InquiriesPage from "./pages/dashboard/inquiries/InquiriesPage";
+import FeeTrackingPage from "./pages/dashboard/fee/FeeTrackingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,7 +62,12 @@ const AppRoutes = () => {
         </ProtectedRoute>
       }>
         <Route index element={<Dashboard />} />
-        {/* Other dashboard routes will be added here */}
+        <Route path="students" element={<StudentsPage />} />
+        <Route path="rooms" element={<RoomsPage />} />
+        <Route path="leave-requests" element={<LeaveRequestsPage />} />
+        <Route path="complaints" element={<ComplaintsPage />} />
+        <Route path="inquiries" element={<InquiriesPage />} />
+        <Route path="fee-tracking" element={<FeeTrackingPage />} />
       </Route>
       
       {/* Catch-all route */}
