@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Student } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -57,14 +56,27 @@ const StudentModal = ({ open, onOpenChange, student, onSuccess }: StudentModalPr
     }
   });
 
+  // Convert form values to database format
+  const adaptFormToDB = (values: StudentFormValues) => {
+    return {
+      name: values.name,
+      roll_no: values.rollNo,
+      room_no: values.roomNo,
+      contact_number: values.contactNumber,
+      email: values.email
+    };
+  };
+
   const handleSubmit = async (values: StudentFormValues) => {
     setIsSubmitting(true);
     try {
+      const dbValues = adaptFormToDB(values);
+      
       if (student) {
         // Update existing student
         const { error } = await supabase
           .from('students')
-          .update(values)
+          .update(dbValues)
           .eq('id', student.id);
         
         if (error) throw error;
@@ -77,7 +89,7 @@ const StudentModal = ({ open, onOpenChange, student, onSuccess }: StudentModalPr
         // Add new student
         const { error } = await supabase
           .from('students')
-          .insert([values]);
+          .insert([dbValues]);
         
         if (error) throw error;
         

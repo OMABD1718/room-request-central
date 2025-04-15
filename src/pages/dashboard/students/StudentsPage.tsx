@@ -13,6 +13,16 @@ import { Plus, Search, Edit, Trash } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import StudentModal from './StudentModal';
 
+// Adapter function to convert database response to our type
+const adaptStudent = (dbStudent: any): Student => ({
+  id: dbStudent.id,
+  name: dbStudent.name,
+  rollNo: dbStudent.roll_no,
+  roomNo: dbStudent.room_no,
+  contactNumber: dbStudent.contact_number,
+  email: dbStudent.email
+});
+
 const fetchStudents = async () => {
   const { data, error } = await supabase
     .from('students')
@@ -20,7 +30,7 @@ const fetchStudents = async () => {
     .order('name', { ascending: true });
 
   if (error) throw error;
-  return data;
+  return data.map(adaptStudent);
 };
 
 const StudentsPage = () => {
