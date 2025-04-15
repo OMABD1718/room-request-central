@@ -27,14 +27,10 @@ interface RoomModalProps {
 
 const roomSchema = z.object({
   roomNo: z.string().min(1, 'Room number is required'),
-  capacity: z.string().transform(Number).pipe(
-    z.number().int().positive('Capacity must be a positive integer')
-  ),
-  occupied: z.string().transform(Number).pipe(
-    z.number().int().min(0, 'Occupied must be a non-negative integer')
-  ),
+  capacity: z.coerce.number().int().positive('Capacity must be a positive integer'),
+  occupied: z.coerce.number().int().min(0, 'Occupied must be a non-negative integer'),
   status: z.enum(['Available', 'Full', 'Maintenance']),
-}).refine(data => data.occupied <= Number(data.capacity), {
+}).refine(data => data.occupied <= data.capacity, {
   message: "Occupied cannot be greater than capacity",
   path: ["occupied"]
 });
@@ -49,13 +45,13 @@ const RoomModal = ({ open, onOpenChange, room, onSuccess }: RoomModalProps) => {
     resolver: zodResolver(roomSchema),
     defaultValues: room ? {
       roomNo: room.roomNo,
-      capacity: String(room.capacity),
-      occupied: String(room.occupied),
+      capacity: room.capacity,
+      occupied: room.occupied,
       status: room.status,
     } : {
       roomNo: '',
-      capacity: '2',
-      occupied: '0',
+      capacity: 2,
+      occupied: 0,
       status: 'Available',
     },
   });
@@ -65,13 +61,13 @@ const RoomModal = ({ open, onOpenChange, room, onSuccess }: RoomModalProps) => {
     if (open) {
       form.reset(room ? {
         roomNo: room.roomNo,
-        capacity: String(room.capacity),
-        occupied: String(room.occupied),
+        capacity: room.capacity,
+        occupied: room.occupied,
         status: room.status,
       } : {
         roomNo: '',
-        capacity: '2',
-        occupied: '0',
+        capacity: 2,
+        occupied: 0,
         status: 'Available',
       });
     }
@@ -82,8 +78,8 @@ const RoomModal = ({ open, onOpenChange, room, onSuccess }: RoomModalProps) => {
     try {
       const roomData = {
         room_no: values.roomNo,
-        capacity: parseInt(values.capacity as unknown as string, 10),
-        occupied: parseInt(values.occupied as unknown as string, 10),
+        capacity: values.capacity,
+        occupied: values.occupied,
         status: values.status,
       };
 

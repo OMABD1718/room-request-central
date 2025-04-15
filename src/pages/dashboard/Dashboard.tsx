@@ -99,7 +99,7 @@ const Dashboard = () => {
     }
   });
 
-  // Fetch recent inquiries
+  // Fetch recent inquiries with adapter
   const { data: recentInquiries = [] } = useQuery({
     queryKey: ['recentInquiries'],
     queryFn: async () => {
@@ -110,7 +110,13 @@ const Dashboard = () => {
         .limit(5);
       
       if (error) throw error;
-      return data;
+      return data.map(inquiry => ({
+        id: inquiry.id,
+        name: inquiry.name,
+        subject: inquiry.subject,
+        submissionDate: inquiry.submission_date,
+        status: inquiry.status as 'Read' | 'Unread'
+      }));
     }
   });
 
@@ -190,7 +196,7 @@ const Dashboard = () => {
                     <p className="text-sm text-muted-foreground">{inquiry.subject}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-muted-foreground">{format(parseISO(inquiry.submission_date), 'yyyy-MM-dd')}</p>
+                    <p className="text-xs text-muted-foreground">{format(parseISO(inquiry.submissionDate), 'yyyy-MM-dd')}</p>
                     <StatusBadge status={inquiry.status} className="ml-2 px-1.5 py-0.5 text-xs rounded" />
                   </div>
                 </div>

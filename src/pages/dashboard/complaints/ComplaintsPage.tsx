@@ -15,6 +15,17 @@ import { Search, CheckCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import ComplaintViewDialog from './ComplaintViewDialog';
 
+// Adapter function to convert database response to our type
+const adaptComplaint = (dbComplaint: any): Complaint => ({
+  id: dbComplaint.id,
+  studentName: dbComplaint.student_name,
+  rollNo: dbComplaint.roll_no,
+  roomNo: dbComplaint.room_no,
+  description: dbComplaint.description,
+  submissionDate: dbComplaint.submission_date,
+  status: dbComplaint.status as 'Resolved' | 'Pending'
+});
+
 const fetchComplaints = async () => {
   const { data, error } = await supabase
     .from('complaints')
@@ -22,7 +33,7 @@ const fetchComplaints = async () => {
     .order('submission_date', { ascending: false });
 
   if (error) throw error;
-  return data;
+  return data.map(adaptComplaint);
 };
 
 const ComplaintsPage = () => {

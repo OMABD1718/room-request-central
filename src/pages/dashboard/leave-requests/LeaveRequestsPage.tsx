@@ -14,6 +14,19 @@ import { format, parseISO } from 'date-fns';
 import { Search, CheckCircle, XCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
+// Adapter function to convert database response to our type
+const adaptLeaveRequest = (dbLeaveRequest: any): LeaveRequest => ({
+  id: dbLeaveRequest.id,
+  studentName: dbLeaveRequest.student_name,
+  rollNo: dbLeaveRequest.roll_no,
+  roomNo: dbLeaveRequest.room_no,
+  reason: dbLeaveRequest.reason,
+  startDate: dbLeaveRequest.start_date,
+  endDate: dbLeaveRequest.end_date,
+  status: dbLeaveRequest.status as 'Approved' | 'Pending' | 'Rejected',
+  submissionDate: dbLeaveRequest.submission_date
+});
+
 const fetchLeaveRequests = async () => {
   const { data, error } = await supabase
     .from('leave_requests')
@@ -21,7 +34,7 @@ const fetchLeaveRequests = async () => {
     .order('submission_date', { ascending: false });
 
   if (error) throw error;
-  return data;
+  return data.map(adaptLeaveRequest);
 };
 
 const LeaveRequestsPage = () => {

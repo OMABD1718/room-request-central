@@ -50,9 +50,7 @@ const feeRecordSchema = z.object({
   student_id: z.string({
     required_error: "Student is required",
   }),
-  amount: z.string().transform(Number).pipe(
-    z.number().positive('Amount must be positive')
-  ),
+  amount: z.coerce.number().positive('Amount must be positive'),
   due_date: z.date({
     required_error: "Due date is required",
   }),
@@ -74,11 +72,11 @@ const FeeRecordModal = ({
     resolver: zodResolver(feeRecordSchema),
     defaultValues: feeRecord ? {
       student_id: feeRecord.student_id,
-      amount: String(feeRecord.amount),
+      amount: feeRecord.amount,
       due_date: new Date(feeRecord.due_date),
     } : {
       student_id: '',
-      amount: '',
+      amount: 0,
       due_date: new Date(),
     },
   });
@@ -88,11 +86,11 @@ const FeeRecordModal = ({
     if (open) {
       form.reset(feeRecord ? {
         student_id: feeRecord.student_id,
-        amount: String(feeRecord.amount),
+        amount: feeRecord.amount,
         due_date: new Date(feeRecord.due_date),
       } : {
         student_id: '',
-        amount: '',
+        amount: 0,
         due_date: new Date(),
       });
     }

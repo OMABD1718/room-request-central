@@ -14,6 +14,15 @@ import { Plus, Search, Edit, Trash } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import RoomModal from './RoomModal';
 
+// Adapter function to convert database response to our type
+const adaptRoom = (dbRoom: any): Room => ({
+  id: dbRoom.id,
+  roomNo: dbRoom.room_no,
+  capacity: dbRoom.capacity,
+  occupied: dbRoom.occupied,
+  status: dbRoom.status as 'Available' | 'Full' | 'Maintenance'
+});
+
 const fetchRooms = async () => {
   const { data, error } = await supabase
     .from('rooms')
@@ -21,7 +30,7 @@ const fetchRooms = async () => {
     .order('room_no', { ascending: true });
 
   if (error) throw error;
-  return data;
+  return data.map(adaptRoom);
 };
 
 const RoomsPage = () => {

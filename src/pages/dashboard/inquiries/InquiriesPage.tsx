@@ -15,6 +15,17 @@ import { Search, CheckCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import InquiryViewDialog from './InquiryViewDialog';
 
+// Adapter function to convert database response to our type
+const adaptInquiry = (dbInquiry: any): Inquiry => ({
+  id: dbInquiry.id,
+  name: dbInquiry.name,
+  email: dbInquiry.email,
+  subject: dbInquiry.subject,
+  message: dbInquiry.message,
+  submissionDate: dbInquiry.submission_date,
+  status: dbInquiry.status as 'Read' | 'Unread'
+});
+
 const fetchInquiries = async () => {
   const { data, error } = await supabase
     .from('inquiries')
@@ -22,7 +33,7 @@ const fetchInquiries = async () => {
     .order('submission_date', { ascending: false });
 
   if (error) throw error;
-  return data;
+  return data.map(adaptInquiry);
 };
 
 const InquiriesPage = () => {
