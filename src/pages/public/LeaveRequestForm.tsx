@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
 
 const LeaveRequestForm = () => {
   const { toast } = useToast();
@@ -28,8 +30,28 @@ const LeaveRequestForm = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate API request
-    setTimeout(() => {
+    try {
+      // Format dates properly for the database
+      const today = new Date();
+      const formattedSubmissionDate = format(today, "yyyy-MM-dd'T'HH:mm:ss'Z'");
+
+      // Insert data into Supabase
+      const { error } = await supabase
+        .from('leave_requests')
+        .insert({
+          student_name: formData.studentName,
+          roll_no: formData.rollNo,
+          room_no: formData.roomNo,
+          reason: formData.reason,
+          start_date: formData.startDate,
+          end_date: formData.endDate,
+          submission_date: formattedSubmissionDate
+        });
+
+      if (error) {
+        throw error;
+      }
+
       toast({
         title: "Leave request submitted",
         description: "Your request has been submitted successfully. You will be notified once it's processed.",
@@ -44,9 +66,16 @@ const LeaveRequestForm = () => {
         startDate: '',
         endDate: '',
       });
-      
+    } catch (error: any) {
+      console.error('Error submitting leave request:', error);
+      toast({
+        title: "Submission failed",
+        description: error.message || "There was an error submitting your request. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (

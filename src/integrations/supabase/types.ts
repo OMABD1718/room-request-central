@@ -9,7 +9,239 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      admins: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      complaints: {
+        Row: {
+          description: string
+          id: string
+          roll_no: string
+          room_no: string
+          status: string
+          student_name: string
+          submission_date: string
+          updated_at: string
+        }
+        Insert: {
+          description: string
+          id?: string
+          roll_no: string
+          room_no: string
+          status?: string
+          student_name: string
+          submission_date?: string
+          updated_at?: string
+        }
+        Update: {
+          description?: string
+          id?: string
+          roll_no?: string
+          room_no?: string
+          status?: string
+          student_name?: string
+          submission_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fee_records: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          payment_date: string | null
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          payment_date?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          payment_date?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_records_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inquiries: {
+        Row: {
+          email: string
+          id: string
+          message: string
+          name: string
+          status: string
+          subject: string
+          submission_date: string
+          updated_at: string
+        }
+        Insert: {
+          email: string
+          id?: string
+          message: string
+          name: string
+          status?: string
+          subject: string
+          submission_date?: string
+          updated_at?: string
+        }
+        Update: {
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          status?: string
+          subject?: string
+          submission_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      leave_requests: {
+        Row: {
+          end_date: string
+          id: string
+          reason: string
+          roll_no: string
+          room_no: string
+          start_date: string
+          status: string
+          student_name: string
+          submission_date: string
+          updated_at: string
+        }
+        Insert: {
+          end_date: string
+          id?: string
+          reason: string
+          roll_no: string
+          room_no: string
+          start_date: string
+          status?: string
+          student_name: string
+          submission_date?: string
+          updated_at?: string
+        }
+        Update: {
+          end_date?: string
+          id?: string
+          reason?: string
+          roll_no?: string
+          room_no?: string
+          start_date?: string
+          status?: string
+          student_name?: string
+          submission_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rooms: {
+        Row: {
+          capacity: number
+          created_at: string
+          id: string
+          occupied: number
+          room_no: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          capacity?: number
+          created_at?: string
+          id?: string
+          occupied?: number
+          room_no: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          id?: string
+          occupied?: number
+          room_no?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      students: {
+        Row: {
+          contact_number: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          roll_no: string
+          room_no: string
+          updated_at: string
+        }
+        Insert: {
+          contact_number: string
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          roll_no: string
+          room_no: string
+          updated_at?: string
+        }
+        Update: {
+          contact_number?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          roll_no?: string
+          room_no?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
