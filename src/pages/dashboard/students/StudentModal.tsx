@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,8 +43,8 @@ const StudentModal = ({ open, onOpenChange, student, onSuccess }: StudentModalPr
     },
   });
 
-  // Reset form when student changes
-  useState(() => {
+  // Reset form when student changes or modal opens/closes
+  useEffect(() => {
     if (open) {
       form.reset(student || {
         name: '',
@@ -54,7 +54,7 @@ const StudentModal = ({ open, onOpenChange, student, onSuccess }: StudentModalPr
         email: '',
       });
     }
-  });
+  }, [open, student, form]);
 
   // Convert form values to database format
   const adaptFormToDB = (values: StudentFormValues) => {
@@ -102,6 +102,7 @@ const StudentModal = ({ open, onOpenChange, student, onSuccess }: StudentModalPr
       onOpenChange(false);
       onSuccess();
     } catch (error) {
+      console.error('Error submitting student form:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'An error occurred',
