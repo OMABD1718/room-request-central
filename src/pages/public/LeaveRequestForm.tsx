@@ -8,16 +8,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useStudentAuth } from '@/contexts/StudentAuthContext';
+import { Navigate } from 'react-router-dom';
 
 const LeaveRequestForm = () => {
   const { toast } = useToast();
+  const { student } = useStudentAuth();
   const [formData, setFormData] = useState({
-    studentName: '',
-    rollNo: '',
-    roomNo: '',
     reason: '',
-    startDate: '',
-    endDate: '',
+    startDate: new Date(),
+    endDate: new Date(),
   });
   const [loading, setLoading] = useState(false);
 
@@ -26,101 +30,154 @@ const LeaveRequestForm = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleDateChange = (name: string, value: Date | undefined) => {
+    if (value) {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Format dates properly for the database
-      const today = new Date();
-      const formattedSubmissionDate = format(today, "yyyy-MM-dd'T'HH:mm:ss'Z'");
+      if (!student) {
+        throw new Error("You must be logged in to submit a leave request");
+      }
 
-      // Insert data into Supabase
+      // Ensure end date is not before start date
+      if (formData.endDate < formData.startDate) {
+        throw new Error("End date cannot be before start date");
+      }
+
+      const leaveRequestData = {
+        student_name: student.name,
+        roll_no: student.rollNo,
+        room_no: student.roomNo,
+        reason: formData.reason,
+        start_date: format(formData.startDate, 'yyyy-MM-dd'),
+        end_date: format(formData.endDate, 'yyyy-MM-dd'),
+        student_id: student.id,
+      };
+
       const { error } = await supabase
         .from('leave_requests')
-        .insert({
-          student_name: formData.studentName,
-          roll_no: formData.rollNo,
-          room_no: formData.roomNo,
-          reason: formData.reason,
-          start_date: formData.startDate,
-          end_date: formData.endDate,
-          submission_date: formattedSubmissionDate
-        });
+        .insert([leaveRequestData]);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Leave request submitted",
-        description: "Your request has been submitted successfully. You will be notified once it's processed.",
+        description: "Your leave request has been registered and is pending approval.",
       });
       
       // Reset form
       setFormData({
-        studentName: '',
-        rollNo: '',
-        roomNo: '',
         reason: '',
-        startDate: '',
-        endDate: '',
+        startDate: new Date(),
+        endDate: new Date(),
       });
-    } catch (error: any) {
-      console.error('Error submitting leave request:', error);
+    } catch (error) {
       toast({
         title: "Submission failed",
-        description: error.message || "There was an error submitting your request. Please try again.",
-        variant: "destructive"
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
+  // Redirect to login if not logged in
+  if (!student) {
+    return (
+      <div className="text-center py-10">
+        <h2 className="text-2xl font-bold mb-4">Login Required</h2>
+        <p className="mb-6">You need to be logged in as a student to submit a leave request.</p>
+        <Button asChild>
+          <Navigate to="/student-login" replace />
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="container max-w-md mx-auto py-10 px-4">
       <Card>
         <CardHeader>
           <CardTitle>Leave Request Form</CardTitle>
-          <CardDescription>Submit your leave request for approval</CardDescription>
+          <CardDescription>Submit a request for leave from the hostel</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="studentName">Student Name</Label>
-              <Input
-                id="studentName"
-                name="studentName"
-                placeholder="Enter your full name"
-                required
-                value={formData.studentName}
-                onChange={handleChange}
-              />
+              <Label htmlFor="studentInfo">Student Information</Label>
+              <div className="bg-muted p-3 rounded-md">
+                <p><strong>Name:</strong> {student.name}</p>
+                <p><strong>Roll Number:</strong> {student.rollNo}</p>
+                <p><strong>Room Number:</strong> {student.roomNo}</p>
+              </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="rollNo">Roll Number</Label>
-                <Input
-                  id="rollNo"
-                  name="rollNo"
-                  placeholder="e.g. HMS001"
-                  required
-                  value={formData.rollNo}
-                  onChange={handleChange}
-                />
+                <Label>Start Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.startDate ? (
+                        format(formData.startDate, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={formData.startDate}
+                      onSelect={(date) => handleDateChange('startDate', date)}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
+              
               <div className="space-y-2">
-                <Label htmlFor="roomNo">Room Number</Label>
-                <Input
-                  id="roomNo"
-                  name="roomNo"
-                  placeholder="e.g. A101"
-                  required
-                  value={formData.roomNo}
-                  onChange={handleChange}
-                />
+                <Label>End Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.endDate ? (
+                        format(formData.endDate, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={formData.endDate}
+                      onSelect={(date) => handleDateChange('endDate', date)}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
             
@@ -129,37 +186,12 @@ const LeaveRequestForm = () => {
               <Textarea
                 id="reason"
                 name="reason"
-                placeholder="Please provide details about your leave"
+                placeholder="Please provide a reason for your leave request"
                 required
                 value={formData.reason}
                 onChange={handleChange}
                 rows={4}
               />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="startDate">Start Date</Label>
-                <Input
-                  id="startDate"
-                  name="startDate"
-                  type="date"
-                  required
-                  value={formData.startDate}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="endDate">End Date</Label>
-                <Input
-                  id="endDate"
-                  name="endDate"
-                  type="date"
-                  required
-                  value={formData.endDate}
-                  onChange={handleChange}
-                />
-              </div>
             </div>
             
             <Button type="submit" className="w-full" disabled={loading}>

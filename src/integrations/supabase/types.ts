@@ -40,6 +40,7 @@ export type Database = {
           roll_no: string
           room_no: string
           status: string
+          student_id: string | null
           student_name: string
           submission_date: string
           updated_at: string
@@ -50,6 +51,7 @@ export type Database = {
           roll_no: string
           room_no: string
           status?: string
+          student_id?: string | null
           student_name: string
           submission_date?: string
           updated_at?: string
@@ -60,11 +62,20 @@ export type Database = {
           roll_no?: string
           room_no?: string
           status?: string
+          student_id?: string | null
           student_name?: string
           submission_date?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "complaints_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fee_records: {
         Row: {
@@ -149,6 +160,7 @@ export type Database = {
           room_no: string
           start_date: string
           status: string
+          student_id: string | null
           student_name: string
           submission_date: string
           updated_at: string
@@ -161,6 +173,7 @@ export type Database = {
           room_no: string
           start_date: string
           status?: string
+          student_id?: string | null
           student_name: string
           submission_date?: string
           updated_at?: string
@@ -173,11 +186,20 @@ export type Database = {
           room_no?: string
           start_date?: string
           status?: string
+          student_id?: string | null
           student_name?: string
           submission_date?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rooms: {
         Row: {
@@ -208,6 +230,35 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      student_auth: {
+        Row: {
+          created_at: string
+          id: string
+          password_hash: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          password_hash: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          password_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_auth_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       students: {
         Row: {

@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { StudentAuthProvider } from "./contexts/StudentAuthContext";
 
 // Public pages
 import PublicLayout from "./pages/public/PublicLayout";
@@ -13,6 +14,7 @@ import LeaveRequestForm from "./pages/public/LeaveRequestForm";
 import ComplaintForm from "./pages/public/ComplaintForm";
 import InquiryForm from "./pages/public/InquiryForm";
 import Login from "./pages/auth/Login";
+import StudentLogin from "./pages/auth/StudentLogin";
 
 // Dashboard pages
 import DashboardLayout from "./components/layout/DashboardLayout";
@@ -54,6 +56,7 @@ const AppRoutes = () => {
       </Route>
       
       <Route path="/login" element={<Login />} />
+      <Route path="/student-login" element={<StudentLogin />} />
       
       {/* Protected dashboard routes */}
       <Route path="/dashboard" element={
@@ -80,11 +83,13 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <AuthProvider>
-        <TooltipProvider>
-          <AppRoutes />
-          <Toaster />
-          <Sonner />
-        </TooltipProvider>
+        <StudentAuthProvider>
+          <TooltipProvider>
+            <AppRoutes />
+            <Toaster />
+            <Sonner />
+          </TooltipProvider>
+        </StudentAuthProvider>
       </AuthProvider>
     </BrowserRouter>
   </QueryClientProvider>

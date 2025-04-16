@@ -6,13 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useStudentAuth } from '@/contexts/StudentAuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Navigate } from 'react-router-dom';
 
 const ComplaintForm = () => {
   const { toast } = useToast();
+  const { student } = useStudentAuth();
   const [formData, setFormData] = useState({
-    studentName: '',
-    rollNo: '',
-    roomNo: '',
     description: '',
   });
   const [loading, setLoading] = useState(false);
@@ -26,8 +27,25 @@ const ComplaintForm = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate API request
-    setTimeout(() => {
+    try {
+      if (!student) {
+        throw new Error("You must be logged in to submit a complaint");
+      }
+
+      const complaintData = {
+        student_name: student.name,
+        roll_no: student.rollNo,
+        room_no: student.roomNo,
+        description: formData.description,
+        student_id: student.id,
+      };
+
+      const { error } = await supabase
+        .from('complaints')
+        .insert([complaintData]);
+
+      if (error) throw error;
+
       toast({
         title: "Complaint submitted",
         description: "Your complaint has been registered. We'll address it as soon as possible.",
@@ -35,15 +53,31 @@ const ComplaintForm = () => {
       
       // Reset form
       setFormData({
-        studentName: '',
-        rollNo: '',
-        roomNo: '',
         description: '',
       });
-      
+    } catch (error) {
+      toast({
+        title: "Submission failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
+
+  // Redirect to login if not logged in
+  if (!student) {
+    return (
+      <div className="text-center py-10">
+        <h2 className="text-2xl font-bold mb-4">Login Required</h2>
+        <p className="mb-6">You need to be logged in as a student to file a complaint.</p>
+        <Button asChild>
+          <Navigate to="/student-login" replace />
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="container max-w-md mx-auto py-10 px-4">
@@ -55,39 +89,11 @@ const ComplaintForm = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="studentName">Student Name</Label>
-              <Input
-                id="studentName"
-                name="studentName"
-                placeholder="Enter your full name"
-                required
-                value={formData.studentName}
-                onChange={handleChange}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="rollNo">Roll Number</Label>
-                <Input
-                  id="rollNo"
-                  name="rollNo"
-                  placeholder="e.g. HMS001"
-                  required
-                  value={formData.rollNo}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="roomNo">Room Number</Label>
-                <Input
-                  id="roomNo"
-                  name="roomNo"
-                  placeholder="e.g. A101"
-                  required
-                  value={formData.roomNo}
-                  onChange={handleChange}
-                />
+              <Label htmlFor="studentInfo">Student Information</Label>
+              <div className="bg-muted p-3 rounded-md">
+                <p><strong>Name:</strong> {student.name}</p>
+                <p><strong>Roll Number:</strong> {student.rollNo}</p>
+                <p><strong>Room Number:</strong> {student.roomNo}</p>
               </div>
             </div>
             
