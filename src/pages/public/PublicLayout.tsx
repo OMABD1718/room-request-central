@@ -2,7 +2,7 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
-  FileText, Home, AlertCircle, Building2, LogIn, Menu, X, User
+  FileText, Home, AlertCircle, Building2, LogIn, Menu, X, User, LayoutDashboard
 } from 'lucide-react';
 import { useState } from 'react';
 import { useStudentAuth } from '@/contexts/StudentAuthContext';
@@ -38,6 +38,15 @@ const PublicLayout = () => {
     },
   ];
 
+  // Add student dashboard to nav items if student is logged in
+  const allNavItems = student 
+    ? [...navItems, {
+        title: 'My Dashboard',
+        href: '/student-dashboard',
+        icon: LayoutDashboard,
+      }]
+    : navItems;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-background">
@@ -48,7 +57,7 @@ const PublicLayout = () => {
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex gap-4">
-            {navItems.map((item, index) => (
+            {allNavItems.map((item, index) => (
               <Button 
                 key={index} 
                 variant="ghost" 
@@ -93,7 +102,7 @@ const PublicLayout = () => {
               </SheetTrigger>
               <SheetContent>
                 <div className="flex flex-col gap-4 py-4">
-                  {navItems.map((item, index) => (
+                  {allNavItems.map((item, index) => (
                     <SheetClose key={index} asChild>
                       <Link 
                         to={item.href}

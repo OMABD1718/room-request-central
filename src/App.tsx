@@ -16,6 +16,9 @@ import InquiryForm from "./pages/public/InquiryForm";
 import Login from "./pages/auth/Login";
 import StudentLogin from "./pages/auth/StudentLogin";
 
+// Student pages
+import StudentDashboard from "./pages/student/StudentDashboard";
+
 // Dashboard pages
 import DashboardLayout from "./components/layout/DashboardLayout";
 import Dashboard from "./pages/dashboard/Dashboard";
@@ -53,6 +56,7 @@ const AppRoutes = () => {
         <Route path="leave-request" element={<LeaveRequestForm />} />
         <Route path="complaint" element={<ComplaintForm />} />
         <Route path="inquiry" element={<InquiryForm />} />
+        <Route path="student-dashboard" element={<StudentDashboard />} />
       </Route>
       
       <Route path="/login" element={<Login />} />

@@ -12,7 +12,7 @@ const StudentLogin = () => {
   }, []);
 
   if (student) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/student-dashboard" replace />;
   }
 
   return (
