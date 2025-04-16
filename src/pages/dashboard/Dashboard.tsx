@@ -1,12 +1,24 @@
 
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import DashboardCard from '@/components/dashboard/DashboardCard';
 import { BedDouble, Users, FileText, AlertCircle, Building2, CreditCard } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
 
+// Adapter functions for each data type
+const adaptInquiry = (dbInquiry: any) => ({
+  id: dbInquiry.id,
+  name: dbInquiry.name,
+  subject: dbInquiry.subject,
+  submissionDate: dbInquiry.submission_date,
+  status: dbInquiry.status
+});
+
 const Dashboard = () => {
+  const navigate = useNavigate();
+  
   useEffect(() => {
     document.title = 'Dashboard | Hostel Management System';
   }, []);
@@ -110,15 +122,14 @@ const Dashboard = () => {
         .limit(5);
       
       if (error) throw error;
-      return data.map(inquiry => ({
-        id: inquiry.id,
-        name: inquiry.name,
-        subject: inquiry.subject,
-        submissionDate: inquiry.submission_date,
-        status: inquiry.status as 'Read' | 'Unread'
-      }));
+      return data.map(adaptInquiry);
     }
   });
+
+  // Handler for card clicks
+  const handleCardClick = (route: string) => {
+    navigate(route);
+  };
 
   return (
     <div>
@@ -130,30 +141,40 @@ const Dashboard = () => {
           value={studentsCount}
           icon={Users}
           description="Registered in hostel"
+          className="cursor-pointer transform hover:scale-105 transition-transform"
+          onClick={() => handleCardClick('/dashboard/students')}
         />
         <DashboardCard
           title="Total Rooms"
           value={roomsData.totalRooms}
           icon={BedDouble}
           description={`${roomsData.availableRooms} rooms available`}
+          className="cursor-pointer transform hover:scale-105 transition-transform"
+          onClick={() => handleCardClick('/dashboard/rooms')}
         />
         <DashboardCard
           title="Leave Requests"
           value={pendingLeaveRequests}
           icon={FileText}
           description="Pending approval"
+          className="cursor-pointer transform hover:scale-105 transition-transform"
+          onClick={() => handleCardClick('/dashboard/leave-requests')}
         />
         <DashboardCard
           title="Complaints"
           value={pendingComplaints}
           icon={AlertCircle}
           description="Requires attention"
+          className="cursor-pointer transform hover:scale-105 transition-transform"
+          onClick={() => handleCardClick('/dashboard/complaints')}
         />
         <DashboardCard
           title="Pending Fees"
           value={dueFees}
           icon={CreditCard}
           description="Due payments"
+          className="cursor-pointer transform hover:scale-105 transition-transform"
+          onClick={() => handleCardClick('/dashboard/fee-tracking')}
         />
       </div>
       
